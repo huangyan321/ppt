@@ -93,7 +93,7 @@ transition: slide-up
 level: 2
 ---
 
-# 浏览器的发展简史
+# 一、浏览器的发展简史
 
 <img src="/user-agent.png" class="rounded shadow" />
 
@@ -104,7 +104,7 @@ layoutClass: gap-16
 - 1990年：Tim Berners-Lee Nexus 不支持图片
 - 1993年：NCSA Mosaic 支持图片，user-agent诞生 NCSA_Mosaic/2.0 (win 3.1)
 - 1994年：Netscape Mozilla -> Netscape Navigator 1.0 (win 3.1)
-- **1995年**： Microsoft获取NCSA_Mosaic授权，推出IE 1.0 （Internet Explorer Mozilla/1.22），此年 JavaScript 诞生
+- 1995年： Microsoft 推出IE 1.0 （Internet Explorer Mozilla/1.22），此年 **JavaScript 诞生**
 - 1997年：IE 4.0 vs Netscape 4.0 Internet Explorer 与 Windows 操作系统捆绑发行，此后四年内，IE 获得了 75% 的市场份额
 - 1998年：Netscape Navigator 与 Mozilla 项目分家
 - 1999年：Internet Explorer 市场份额达到99%
@@ -112,542 +112,271 @@ layoutClass: gap-16
 - 2003年： Safari 诞生 Webkit内核
 - 2004年：Mozilla Firefox 1.0 诞生
 - 2008年：Google Chrome 诞生
-- 2010年，Mozilla Firefox 及其他浏览器将 Internet Explorer 的市场份额降低到 50%
 
 世界历史从不缺少史诗般的权力斗争，有征服世界的暴君，也有落败的勇士。Web 浏览器的历史也大抵如此。学术先驱们编写出引发信息革命的简易软件，并为浏览器的优势和互联网用户而战。
+---
+layout: two-cols
+layoutClass: gap-16
+---
+# 二、浏览器的多进程架构
+
+<div v-click flex="~" gap-10 >
+<img src="/process1.jpg" class="w-90%  rounded shadow" />
+<img src="/process2.jpg" class="w-90% rounded shadow" />
+</div>
+
+---
+
+# 1. 区分进程和线程？
+
+- 系统给进程分配独立的内存空间
+
+- 进程之间相互独立
+
+- <div text-red>一个进程由一个或多个线程组成</div>
+
+- 多个线程在进程中协助完成任务
+
+- 同一进程下的各个线程之间共享程序的内存空间（包括代码段、数据集、堆等）
+
+> Tips
+> 进程是CPU资源**分配**的最小单位(能拥有资源和独立运行的最小单位)
+> 线程是CPU**调度**的最小单位（线程是建立在进程的基础上的运行单位，一个进程可以有多个线程）
+> 一般通用叫法的单线程和多线程，都是指的进程内的线程数量是单个还是多个
+
+---
+
+# 2. 浏览器包含哪些类型的进程？
+
+- Browser 进程
+  - 负责浏览器的界面显示，与用户交互，如前进后退按钮等
+  - 负责各个页面的管理，创建和销毁其他进程
+  - 网络资源的管理，下载等
+
+- Renderer进程：浏览器内核（webkit、blink）渲染进程
+  - 负责页面的渲染，JS执行，事件处理等
+  - 每个tab页一个进程，互不影响
+
+- GPU进程：负责图形绘制
+
+- 插件进程：仅当使用插件时才创建
+
+---
+
+# 2. 浏览器多进程的特点？
+
+## 优点
+
+- 避免单个page crash（tab、插件等）影响整个浏览器
+- 充分利用多核优势
+- 更为安全，在系统层面界定了不同进程的权限
+
+## 缺点
+
+- 内存消耗比较大，不同进程之间的内存不共享，不同进程的内存需要包含浏览器内核的多份副本
+
+---
+
+# Chrome浏览器的多进程架构
+
+<img src="/percess_manage.png" class="m-auto w-60%  rounded shadow" />
+
+为了节省内存，Chrome限制了最多的进程数，最大进程数量由设备内存和CPU能力决定，当达到这一限制时，Chrome会将共用之前同一个站点的渲染进程。
+
+
+---
+
+# 渲染进程（浏览器内核）
+
+- GUI渲染线程（主线程、工作线程、排版线程、光栅线程、合成器线程等）
+  负责渲染页面、布局和绘制
+  页面需要回流或重绘时，该线程就会执行
+
+- JS引擎线程
+
+  负责解析和执行JavaScript脚本程序
+  只有一个JavaScript引擎线程，也就是说JavaScript是单线程执行的
+
+- 事件触发线程
+  用来控制事件循环（鼠标点击等）
+  当事件满足触发条件时，将事件放入到JS引擎的执行队列中
+
+- 定时器触发线程
+  用来控制定时器，如setTimeout、setInterval所在的线程
+  定时器任务不是由JS引擎计时的，而是由定时器触发线程来计时的
+  当定时器计时完毕后，通知事件触发线程
+
+- 异步http请求线程
+  浏览器有一个单独的线程来处理Ajax请求
+  当请求完成时，若有回调函数，通知事件触发线程
+
+---
+
+思考两个问题：
+1. 为什么Javascript执行是单线程的？
+2. 为什么GUI线程与JS引擎线程互斥？
+
+创建js这门语言的时候，多进程多线程的架构不流行，硬件的支持不好，而且多线程操作时需要加锁，编码的复杂性会增加。
+
+js能操作DOM，如果JS和GUI两个线程同时操作DOM，那么渲染可能会导致不可预测的结果，所以一开始的设定就是互斥的关系。
+
+
+---
+
+# 三、浏览器渲染流程
+
+1. 解析和构建DOM Tree (DOM树到屏幕图形的转化原理，其本质就是树结构到层结构的演化)
+2. 解析CSS构建CSSOM Tree，合成Render Tree，同一z轴的元素合并为一个渲染对象
+   - 根元素document
+   - 具有明确定位属性（relative、fixed、sticky、absolute）
+   - CSS filter属性
+   - CSS transform属性
+   - overflow 不为 visible
+   - etc...
+
+
+---
+
+# 三、浏览器渲染流程
+
+3. 布局（Layout）计算每个节点在屏幕中的位置，生成布局树
+4. 合成层： 图形层 Graphics Layer（第二个层模型），满足下列条件把渲染层提升为一个合成层
+   - 3D transform
+   - 对子元素使用了`will-change: transform`属性的元素
+   - 使用加速视频解码的`<video>`元素，拥有3D（WebGL）上下文或加速的2D上下文的`<canvas>`元素
+   - 对opacity、transform、filter属性使用了animation或transition的元素
+
+---
+
+# 三、浏览器渲染流程
+
+4. 绘制：合成层的绘制，生成每一个合成层的绘制记录
+5. 栅格化： 将合成层分为图块，每个图块转化为合成帧（位图），作为纹理通过GPU进程存储在GPU的显存中。
+6. 合成与显示： 合成帧随后会通过IPC协议将消息传递给浏览器主进程。浏览器收到消息后，会将页面内容绘制到内存中。最后再将内存中的内容显示在屏幕上。
+
+---
+
+# Q1： DOMContentLoaded 和 Load 事件的区别？
+<div></div>
+DOMContentLoaded：仅当DOM加载完成，不包括样式表、图片等外部资源加载完成；  
+
+Load：当所有资源加载完成，包括样式表、图片等外部资源加载完成；
+
+
+<img src="/load.png" class="m-auto w-60%  rounded shadow" />
+
+---
+
+# Q2： CSS加载是否会阻塞页面加载？
+
+<div></div>
+
+结论：
+
+1. 不会阻塞DOM树的解析（因此js中能获取dom元素，虽然页面还未渲染）
+2. 会阻塞render树渲染（浏览器渲染到页面时需等待css加载完毕）
+3. 会阻塞后面的js执行（js执行时可能会操作dom元素，如果css未加载完毕，dom元素可能未加载完毕）
+
+---
+
+# Q3： JS的defer和async的区别？
+
+<div></div>
+
+绿色线代表HTML解析过程  
+蓝色线代表网络读取  
+红色线代表执行时间  
+
+1. 网络读取都是异步的，不会阻塞HTML解析。
+2. 下载后的执行时机不一样。
+3. defer是顺序的。
+
+
+---
+
+# JS的运行原理
+
+<img src="/js_cover.png" class="m-auto mt-10 w-40%  rounded shadow" />
+
+
+---
+
+# 1. JS是单线程的
+
+单线程的优点：
+1. 简单、安全
+2. 无锁问题
+3. 节省内存
 
 ---
 layout: two-cols
 layoutClass: gap-16
 ---
 
-# Table of contents
+# 2. JS是非阻塞的
 
-You can use the `Toc` component to generate a table of contents for your slides:
+实现机制： 事件循环机制（event loop）
 
-```html
-<Toc minDepth="1" maxDepth="1"></Toc>
-```
+（1）所有同步任务都在主线程上执行，形成一个执行栈（execution context stack）。
 
-The title will be inferred from your slide content, or you can override it with `title` and `level` in your frontmatter.
+（2）主线程之外，还存在一个"任务队列"（task queue）。只要异步任务有了运行结果，就在"任务队列"之中放置一个事件。
 
-::right::
+（3）一旦"执行栈"中的所有同步任务执行完毕，系统就会读取"任务队列"，看看里面有哪些事件。那些对应的异步任务，于是结束等待状态，进入执行栈，开始执行。
 
-<Toc v-click minDepth="1" maxDepth="2"></Toc>
+（4）主线程不断重复上面的第三步。
 
----
-layout: image-right
-image: https://cover.sli.dev
----
+[JavaScript 运行机制详解：再谈Event Loop —— 阮一峰](https://www.ruanyifeng.com/blog/2014/10/event-loop.html)
+:: right ::
 
-# Code
-
-Use code snippets and get the highlighting directly, and even types hover![^1]
-
-```ts {all|5|7|7-8|10|all} twoslash
-// TwoSlash enables TypeScript hover information
-// and errors in markdown code blocks
-// More at https://shiki.style/packages/twoslash
-
-import { computed, ref } from "vue";
-
-const count = ref(0);
-const doubled = computed(() => count.value * 2);
-
-doubled.value = 2;
-```
-
-<arrow v-click="[4, 5]" x1="350" y1="310" x2="195" y2="334" color="#953" width="2" arrowSize="1" />
-
-<!-- This allow you to embed external code blocks -->
-
-<<< @/snippets/external.ts#snippet
-
-<!-- Footer -->
-
-[^1]: [Learn More](https://sli.dev/guide/syntax.html#line-highlighting)
-
-<!-- Inline style -->
-<style>
-.footnotes-sep {
-  @apply mt-5 opacity-10;
-}
-.footnotes {
-  @apply text-sm opacity-75;
-}
-.footnote-backref {
-  display: none;
-}
-</style>
-
-<!--
-Notes can also sync with clicks
-
-[click] This will be highlighted after the first click
-
-[click] Highlighted with `count = ref(0)`
-
-[click:3] Last click (skip two clicks)
--->
-
----
-level: 2
----
-
-# Shiki Magic Move
-
-Powered by [shiki-magic-move](https://shiki-magic-move.netlify.app/), Slidev supports animations across multiple code snippets.
-
-Add multiple code blocks and wrap them with <code>````md magic-move</code> (four backticks) to enable the magic move. For example:
-
-````md magic-move {lines: true}
-```ts {*|2|*}
-// step 1
-const author = reactive({
-  name: "John Doe",
-  books: [
-    "Vue 2 - Advanced Guide",
-    "Vue 3 - Basic Guide",
-    "Vue 4 - The Mystery",
-  ],
-});
-```
-
-```ts {*|1-2|3-4|3-4,8}
-// step 2
-export default {
-  data() {
-    return {
-      author: {
-        name: "John Doe",
-        books: [
-          "Vue 2 - Advanced Guide",
-          "Vue 3 - Basic Guide",
-          "Vue 4 - The Mystery",
-        ],
-      },
-    };
-  },
-};
-```
-
-```ts
-// step 3
-export default {
-  data: () => ({
-    author: {
-      name: "John Doe",
-      books: [
-        "Vue 2 - Advanced Guide",
-        "Vue 3 - Basic Guide",
-        "Vue 4 - The Mystery",
-      ],
-    },
-  }),
-};
-```
-
-Non-code blocks are ignored.
-
-```vue
-<!-- step 4 -->
-<script setup>
-const author = {
-  name: "John Doe",
-  books: [
-    "Vue 2 - Advanced Guide",
-    "Vue 3 - Basic Guide",
-    "Vue 4 - The Mystery",
-  ],
-};
-</script>
-```
-````
+<img src="/event_loop.png" class="m-auto mt-10  rounded shadow" />
 
 ---
 
-# Components
+# 同步任务和异步任务
 
-<div grid="~ cols-2 gap-4">
-<div>
+<img src="/event_loop.png" class="m-auto mt-10  rounded shadow" />
 
-You can use Vue components directly inside your slides.
+1. ajax 进入EventTable并注册回调函数success
+2. 执行栈执行console.log('start')
+3. ajax事件完成，回调函数进入Callback Queue
+4. 主线程空闲时从Callback Queue读取回调函数success执行
 
-We have provided a few built-in components like `<Tweet/>` and `<Youtube/>` that you can use directly. And adding your custom components is also super easy.
 
-```html
-<Counter :count="10" />
-```
 
-<!-- ./components/Counter.vue -->
-<Counter :count="10" m="t-4" />
-
-Check out [the guides](https://sli.dev/builtin/components.html) for more.
-
-</div>
-<div>
-
-```html
-<Tweet id="1390115482657726468" />
-```
-
-<Tweet id="1390115482657726468" scale="0.65" />
-
-</div>
-</div>
-
-<!--
-Presenter note with **bold**, *italic*, and ~~striked~~ text.
-
-Also, HTML elements are valid:
-<div class="flex w-full">
-  <span style="flex-grow: 1;">Left content</span>
-  <span>Right content</span>
-</div>
--->
-
----
-class: px-20
----
-
-# Themes
-
-Slidev comes with powerful theming support. Themes can provide styles, layouts, components, or even configurations for tools. Switching between themes by just **one edit** in your frontmatter:
-
-<div grid="~ cols-2 gap-2" m="t-2">
-
-```yaml
----
-theme: default
----
-```
-
-```yaml
----
-theme: seriph
----
-```
-
-<img border="rounded" src="https://github.com/slidevjs/themes/blob/main/screenshots/theme-default/01.png?raw=true" alt="">
-
-<img border="rounded" src="https://github.com/slidevjs/themes/blob/main/screenshots/theme-seriph/01.png?raw=true" alt="">
-
-</div>
-
-Read more about [How to use a theme](https://sli.dev/themes/use.html) and
-check out the [Awesome Themes Gallery](https://sli.dev/themes/gallery.html).
+想下setTimeOut(fn,0)的执行过程？
+主线程执行完同步任务后，会立即执行setTimeout的回调函数吗？
+答案是不会，setTimeout的回调函数会进入任务队列，等待主线程空闲时才会执行。
 
 ---
 
-# Clicks Animations
+# 宏任务与微任务
 
-You can add `v-click` to elements to add a click animation.
+<div></div>
 
-<div v-click>
+除了同步任务异步任务之分，任务还可以细分为宏任务与微任务：
 
-This shows up when you click the slide:
-
-```html
-<div v-click>This shows up when you click the slide.</div>
-```
-
-</div>
-
-<br>
-
-<v-click>
-
-The <span v-mark.red="3"><code>v-mark</code> directive</span>
-also allows you to add
-<span v-mark.circle.orange="4">inline marks</span>
-, powered by [Rough Notation](https://roughnotation.com/):
-
-```html
-<span v-mark.underline.orange>inline markers</span>
-```
-
-</v-click>
-
-<div mt-20 v-click>
-
-[Learn More](https://sli.dev/guide/animations#click-animations)
-
-</div>
+macro-task（宏任务）：包括整体脚本代码script、setTimeout、setInterval
+micro-task（微任务）：Promise、process.nextTick、MutationObserver等
 
 ---
-
-# Motions
-
-Motion animations are powered by [@vueuse/motion](https://motion.vueuse.org/), triggered by `v-motion` directive.
-
-```html
-<div
-  v-motion
-  :initial="{ x: -80 }"
-  :enter="{ x: 0 }"
-  :click-3="{ x: 80 }"
-  :leave="{ x: 1000 }"
->
-  Slidev
-</div>
-```
-
-<div class="w-60 relative">
-  <div class="relative w-40 h-40">
-    <img
-      v-motion
-      :initial="{ x: 800, y: -100, scale: 1.5, rotate: -50 }"
-      :enter="final"
-      class="absolute inset-0"
-      src="https://sli.dev/logo-square.png"
-      alt=""
-    />
-    <img
-      v-motion
-      :initial="{ y: 500, x: -100, scale: 2 }"
-      :enter="final"
-      class="absolute inset-0"
-      src="https://sli.dev/logo-circle.png"
-      alt=""
-    />
-    <img
-      v-motion
-      :initial="{ x: 600, y: 400, scale: 2, rotate: 100 }"
-      :enter="final"
-      class="absolute inset-0"
-      src="https://sli.dev/logo-triangle.png"
-      alt=""
-    />
-  </div>
-
-  <div
-    class="text-5xl absolute top-14 left-40 text-[#2B90B6] -z-1"
-    v-motion
-    :initial="{ x: -80, opacity: 0}"
-    :enter="{ x: 0, opacity: 1, transition: { delay: 2000, duration: 1000 } }">
-    Slidev
-  </div>
-</div>
-
-<!-- vue script setup scripts can be directly used in markdown, and will only affects current page -->
-<script setup lang="ts">
-const final = {
-  x: 0,
-  y: 0,
-  rotate: 0,
-  scale: 1,
-  transition: {
-    type: 'spring',
-    damping: 10,
-    stiffness: 20,
-    mass: 2
-  }
-}
-</script>
-
-<div
-  v-motion
-  :initial="{ x:35, y: 30, opacity: 0}"
-  :enter="{ y: 0, opacity: 1, transition: { delay: 3500 } }">
-
-[Learn More](https://sli.dev/guide/animations.html#motion)
-
-</div>
-
+layout: two-cols
+layoutClass: gap-16
 ---
 
-# LaTeX
+# 宏任务与微任务
 
-LaTeX is supported out-of-box powered by [KaTeX](https://katex.org/).
+<img src="/tasks.jpg" class="m-auto mt-10  rounded shadow" />
 
-<br>
+:: right ::
 
-Inline $\sqrt{3x-1}+(1+x)^2$
+进入整体代码（宏任务）后，开始第一次循环。接着执行所有的微任务，当微任务中发起了新的微任务，会继续执行微任务，直到微任务队列为空，浏览器端在微任务执行完成之后会进行一次UI的渲染。接着执行宏任务队列中的下一个任务，然后再次执行所有的微任务，如此循环。
 
-Block
-
-$$
-{1|3|all}
-\begin{array}{c}
-
-\nabla \times \vec{\mathbf{B}} -\, \frac1c\, \frac{\partial\vec{\mathbf{E}}}{\partial t} &
-= \frac{4\pi}{c}\vec{\mathbf{j}}    \nabla \cdot \vec{\mathbf{E}} & = 4 \pi \rho \\
-
-\nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t} & = \vec{\mathbf{0}} \\
-
-\nabla \cdot \vec{\mathbf{B}} & = 0
-
-\end{array}
-$$
-
-<br>
-
-[Learn more](https://sli.dev/guide/syntax#latex)
-
----
-
-# Diagrams
-
-You can create diagrams / graphs from textual descriptions, directly in your Markdown.
-
-<div class="grid grid-cols-4 gap-5 pt-4 -mb-6">
-
-```mermaid {scale: 0.5, alt: 'A simple sequence diagram'}
-sequenceDiagram
-    Alice->John: Hello John, how are you?
-    Note over Alice,John: A typical interaction
-```
-
-```mermaid {theme: 'neutral', scale: 0.8}
-graph TD
-B[Text] --> C{Decision}
-C -->|One| D[Result 1]
-C -->|Two| E[Result 2]
-```
-
-```mermaid
-mindmap
-  root((mindmap))
-    Origins
-      Long history
-      ::icon(fa fa-book)
-      Popularisation
-        British popular psychology author Tony Buzan
-    Research
-      On effectiveness<br/>and features
-      On Automatic creation
-        Uses
-            Creative techniques
-            Strategic planning
-            Argument mapping
-    Tools
-      Pen and paper
-      Mermaid
-```
-
-```plantuml {scale: 0.7}
-@startuml
-
-package "Some Group" {
-  HTTP - [First Component]
-  [Another Component]
-}
-
-node "Other Groups" {
-  FTP - [Second Component]
-  [First Component] --> FTP
-}
-
-cloud {
-  [Example 1]
-}
-
-database "MySql" {
-  folder "This is my folder" {
-    [Folder 3]
-  }
-  frame "Foo" {
-    [Frame 4]
-  }
-}
-
-[Another Component] --> [Example 1]
-[Example 1] --> [Folder 3]
-[Folder 3] --> [Frame 4]
-
-@enduml
-```
-
-</div>
-
-[Learn More](https://sli.dev/guide/syntax.html#diagrams)
-
----
-foo: bar
-dragPos:
-  square: 691,32,167,_,-16
----
-
-# Draggable Elements
-
-Double-click on the draggable elements to edit their positions.
-
-<br>
-
-###### Directive Usage
-
-```md
-<img v-drag="'square'" src="https://sli.dev/logo.png">
-```
-
-<br>
-
-###### Component Usage
-
-```md
-<v-drag text-3xl>
-  <carbon:arrow-up />
-  Use the `v-drag` component to have a draggable container!
-</v-drag>
-```
-
-<v-drag pos="663,206,261,_,-15">
-  <div text-center text-3xl border border-main rounded>
-    Double-click me!
-  </div>
-</v-drag>
-
-<img v-drag="'square'" src="https://sli.dev/logo.png">
-
-###### Draggable Arrow
-
-```md
-<v-drag-arrow two-way />
-```
-
-<v-drag-arrow pos="67,452,253,46" two-way op70 />
-
----
-src: ./pages/multiple-entries.md
-hide: false
----
-
----
-
-# Monaco Editor
-
-Slidev provides built-in Monaco Editor support.
-
-Add `{monaco}` to the code block to turn it into an editor:
-
-```ts {monaco}
-import { ref } from "vue";
-import { emptyArray } from "./external";
-
-const arr = ref(emptyArray(10));
-```
-
-Use `{monaco-run}` to create an editor that can execute the code directly in the slide:
-
-```ts {monaco-run}
-import { version } from "vue";
-import { emptyArray, sayHello } from "./external";
-
-sayHello();
-console.log(`vue ${version}`);
-console.log(
-  emptyArray<number>(10).reduce(
-    (fib) => [...fib, fib.at(-1)! + fib.at(-2)!],
-    [1, 1],
-  ),
-);
-```
 
 ---
 layout: center
 class: text-center
 ---
 
-# Learn More
+# 谢谢
 
-[Documentations](https://sli.dev) · [GitHub](https://github.com/slidevjs/slidev) · [Showcases](https://sli.dev/showcases.html)
+
