@@ -17,5 +17,8 @@
     "turbo": "latest",
     "vue": "^3.4.27"
   },
-  "packageManager": "pnpm@8.6.10"
+  "packageManager": "pnpm@8.6.10",
+  "dependencies": {
+    "prettier-plugin-slidev": "^1.0.5"
+  }
 }

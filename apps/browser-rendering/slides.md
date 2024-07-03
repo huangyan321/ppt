@@ -1,11 +1,11 @@
 ---
 # try also 'default' to start simple
-theme: seriph
+theme: default
 # random image from a curated Unsplash collection by Anthony
 # like them? see https://unsplash.com/collections/94734566/slidev
 background: https://cover.sli.dev
 # some information about your slides, markdown enabled
-title: Chrome 内核浏览器渲染原理
+title: 前端优化原理
 info: |
   ## Slidev Starter Template
   Presentation slides for developers.
@@ -22,15 +22,17 @@ drawings:
 transition: slide-left
 # enable MDC Syntax: https://sli.dev/guide/syntax#mdc-syntax
 mdc: true
+colorSchema: dark
 ---
 
-# Chrome 内核浏览器渲染原理
+# 前端优化原理
 
-简单介绍
+<div class="text-6" style="mix-blend-mode: difference">chrome浏览器运行机制</div>
+<div class="text-5 mt-lg" style="mix-blend-mode: difference">@huangyan321</div>
 
 <div class="pt-12">
   <span @click="$slidev.nav.next" class="px-2 py-1 rounded cursor-pointer" hover="bg-white bg-opacity-10">
-    Press Space for next page <carbon:arrow-right class="inline"/>
+     <carbon:arrow-right class="inline"/>
   </span>
 </div>
 
@@ -50,24 +52,21 @@ The last comment block of each slide will be treated as slide notes. It will be 
 
 ---
 transition: fade-out
+layout: two-cols
+layoutClass: gap-16
 ---
 
-# What is Slidev?
+# 大纲
 
-Slidev is a slides maker and presenter designed for developers, consist of the following features
+<div class="mt-10"></div>
 
-- 📝 **Text-based** - focus on the content with Markdown, and then style them later
-- 🎨 **Themable** - theme can be shared and used with npm packages
-- 🧑‍💻 **Developer Friendly** - code highlighting, live coding with autocompletion
-- 🤹 **Interactive** - embedding Vue components to enhance your expressions
-- 🎥 **Recording** - built-in recording and camera view
-- 📤 **Portable** - export into PDF, PPTX, PNGs, or even a hostable SPA
-- 🛠 **Hackable** - anything possible on a webpage
+- 浏览器的发展历史
 
-<br>
-<br>
+- 浏览器的多进程架构
 
-Read more about [Why Slidev?](https://sli.dev/guide/why)
+- 浏览器的渲染原理
+
+- JS引擎的运行原理
 
 <!--
 You can have `style` tag in markdown to override the style for the current page.
@@ -76,7 +75,6 @@ Learn more: https://sli.dev/guide/syntax#embedded-styles
 
 <style>
 h1 {
-  background-color: #2B90B6;
   background-image: linear-gradient(45deg, #4EC5D4 10%, #146b8c 20%);
   background-size: 100%;
   -webkit-background-clip: text;
@@ -95,27 +93,28 @@ transition: slide-up
 level: 2
 ---
 
-# Navigation
+# 浏览器的发展简史
 
-Hover on the bottom-left corner to see the navigation's controls panel, [learn more](https://sli.dev/guide/navigation.html)
+<img src="/user-agent.png" class="rounded shadow" />
 
-## Keyboard Shortcuts
+---
+layoutClass: gap-16
+---
 
-|     |     |
-| --- | --- |
-| <kbd>right</kbd> / <kbd>space</kbd>| next animation or slide |
-| <kbd>left</kbd>  / <kbd>shift</kbd><kbd>space</kbd> | previous animation or slide |
-| <kbd>up</kbd> | previous slide |
-| <kbd>down</kbd> | next slide |
+- 1990年：Tim Berners-Lee Nexus 不支持图片
+- 1993年：NCSA Mosaic 支持图片，user-agent诞生 NCSA_Mosaic/2.0 (win 3.1)
+- 1994年：Netscape Mozilla -> Netscape Navigator 1.0 (win 3.1)
+- **1995年**： Microsoft获取NCSA_Mosaic授权，推出IE 1.0 （Internet Explorer Mozilla/1.22），此年 JavaScript 诞生
+- 1997年：IE 4.0 vs Netscape 4.0 Internet Explorer 与 Windows 操作系统捆绑发行，此后四年内，IE 获得了 75% 的市场份额
+- 1998年：Netscape Navigator 与 Mozilla 项目分家
+- 1999年：Internet Explorer 市场份额达到99%
+- 2002年：Netscape 为反垄断 开放源代码，非营利性质的 Mozilla 诞生
+- 2003年： Safari 诞生 Webkit内核
+- 2004年：Mozilla Firefox 1.0 诞生
+- 2008年：Google Chrome 诞生
+- 2010年，Mozilla Firefox 及其他浏览器将 Internet Explorer 的市场份额降低到 50%
 
-<!-- https://sli.dev/guide/animations.html#click-animations -->
-<img
-  v-click
-  class="absolute -bottom-9 -left-7 w-80 opacity-50"
-  src="https://sli.dev/assets/arrow-bottom-left.svg"
-  alt=""
-/>
-<p v-after class="absolute bottom-23 left-45 opacity-30 transform -rotate-10">Here!</p>
+世界历史从不缺少史诗般的权力斗争，有征服世界的暴君，也有落败的勇士。Web 浏览器的历史也大抵如此。学术先驱们编写出引发信息革命的简易软件，并为浏览器的优势和互联网用户而战。
 
 ---
 layout: two-cols
@@ -150,20 +149,22 @@ Use code snippets and get the highlighting directly, and even types hover![^1]
 // and errors in markdown code blocks
 // More at https://shiki.style/packages/twoslash
 
-import { computed, ref } from 'vue'
+import { computed, ref } from "vue";
 
-const count = ref(0)
-const doubled = computed(() => count.value * 2)
+const count = ref(0);
+const doubled = computed(() => count.value * 2);
 
-doubled.value = 2
+doubled.value = 2;
 ```
 
 <arrow v-click="[4, 5]" x1="350" y1="310" x2="195" y2="334" color="#953" width="2" arrowSize="1" />
 
 <!-- This allow you to embed external code blocks -->
+
 <<< @/snippets/external.ts#snippet
 
 <!-- Footer -->
+
 [^1]: [Learn More](https://sli.dev/guide/syntax.html#line-highlighting)
 
 <!-- Inline style -->
@@ -203,13 +204,13 @@ Add multiple code blocks and wrap them with <code>````md magic-move</code> (four
 ```ts {*|2|*}
 // step 1
 const author = reactive({
-  name: 'John Doe',
+  name: "John Doe",
   books: [
-    'Vue 2 - Advanced Guide',
-    'Vue 3 - Basic Guide',
-    'Vue 4 - The Mystery'
-  ]
-})
+    "Vue 2 - Advanced Guide",
+    "Vue 3 - Basic Guide",
+    "Vue 4 - The Mystery",
+  ],
+});
 ```
 
 ```ts {*|1-2|3-4|3-4,8}
@@ -218,16 +219,16 @@ export default {
   data() {
     return {
       author: {
-        name: 'John Doe',
+        name: "John Doe",
         books: [
-          'Vue 2 - Advanced Guide',
-          'Vue 3 - Basic Guide',
-          'Vue 4 - The Mystery'
-        ]
-      }
-    }
-  }
-}
+          "Vue 2 - Advanced Guide",
+          "Vue 3 - Basic Guide",
+          "Vue 4 - The Mystery",
+        ],
+      },
+    };
+  },
+};
 ```
 
 ```ts
@@ -235,15 +236,15 @@ export default {
 export default {
   data: () => ({
     author: {
-      name: 'John Doe',
+      name: "John Doe",
       books: [
-        'Vue 2 - Advanced Guide',
-        'Vue 3 - Basic Guide',
-        'Vue 4 - The Mystery'
-      ]
-    }
-  })
-}
+        "Vue 2 - Advanced Guide",
+        "Vue 3 - Basic Guide",
+        "Vue 4 - The Mystery",
+      ],
+    },
+  }),
+};
 ```
 
 Non-code blocks are ignored.
@@ -252,13 +253,13 @@ Non-code blocks are ignored.
 <!-- step 4 -->
 <script setup>
 const author = {
-  name: 'John Doe',
+  name: "John Doe",
   books: [
-    'Vue 2 - Advanced Guide',
-    'Vue 3 - Basic Guide',
-    'Vue 4 - The Mystery'
-  ]
-}
+    "Vue 2 - Advanced Guide",
+    "Vue 3 - Basic Guide",
+    "Vue 4 - The Mystery",
+  ],
+};
 </script>
 ```
 ````
@@ -464,7 +465,9 @@ LaTeX is supported out-of-box powered by [KaTeX](https://katex.org/).
 Inline $\sqrt{3x-1}+(1+x)^2$
 
 Block
-$$ {1|3|all}
+
+$$
+{1|3|all}
 \begin{array}{c}
 
 \nabla \times \vec{\mathbf{B}} -\, \frac1c\, \frac{\partial\vec{\mathbf{E}}}{\partial t} &
@@ -618,21 +621,26 @@ Slidev provides built-in Monaco Editor support.
 Add `{monaco}` to the code block to turn it into an editor:
 
 ```ts {monaco}
-import { ref } from 'vue'
-import { emptyArray } from './external'
+import { ref } from "vue";
+import { emptyArray } from "./external";
 
-const arr = ref(emptyArray(10))
+const arr = ref(emptyArray(10));
 ```
 
 Use `{monaco-run}` to create an editor that can execute the code directly in the slide:
 
 ```ts {monaco-run}
-import { version } from 'vue'
-import { emptyArray, sayHello } from './external'
+import { version } from "vue";
+import { emptyArray, sayHello } from "./external";
 
-sayHello()
-console.log(`vue ${version}`)
-console.log(emptyArray<number>(10).reduce(fib => [...fib, fib.at(-1)! + fib.at(-2)!], [1, 1]))
+sayHello();
+console.log(`vue ${version}`);
+console.log(
+  emptyArray<number>(10).reduce(
+    (fib) => [...fib, fib.at(-1)! + fib.at(-2)!],
+    [1, 1],
+  ),
+);
 ```
 
 ---
