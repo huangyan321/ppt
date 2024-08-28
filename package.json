@@ -5,20 +5,23 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "export": "turbo run export",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "@slidev/cli": "^0.49.9",
+    "@slidev/cli": "^0.49.29",
     "@slidev/theme-default": "latest",
     "@slidev/theme-seriph": "latest",
     "eslint": "^8.57.0",
-    "prettier": "^3.2.5",
+    "playwright-chromium": "^1.46.1",
+    "prettier": "^3.3.3",
     "tsconfig": "workspace:*",
     "turbo": "latest",
-    "vue": "^3.4.27"
+    "vue": "^3.4.38"
   },
-  "packageManager": "pnpm@8.6.10",
+  "packageManager": "pnpm@8.15.9",
   "dependencies": {
+    "@slidev/client": "^0.49.29",
     "prettier-plugin-slidev": "^1.0.5"
   }
 }
