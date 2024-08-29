@@ -22,12 +22,12 @@ drawings:
 transition: slide-left
 # enable MDC Syntax: https://sli.dev/guide/syntax#mdc-syntax
 mdc: true
-colorSchema: dark
+colorSchema: light
 ---
 
 # 前端优化原理
 
-<div class="text-6" style="mix-blend-mode: difference">浏览器运行机制 @van</div>
+<div class="text-6">浏览器运行机制 @van</div>
 
 <div class="pt-12">
   <span @click="$slidev.nav.next" class="px-2 py-1 rounded cursor-pointer" hover="bg-white bg-opacity-10">
@@ -232,55 +232,116 @@ class: text-sm
 
 ---
 
-# 三、浏览器渲染流程
+## 三、浏览器渲染流程
 
-1. 解析和构建DOM Tree (DOM树到屏幕图形的转化原理，其本质就是树结构到层结构的演化)
-2. 解析CSS构建CSSOM Tree，合成Render Tree，同一z轴的元素合并为一个渲染对象
-   - 根元素document
-   - 具有明确定位属性（relative、fixed、sticky、absolute）
-   - CSS filter属性
-   - CSS transform属性
-   - overflow 不为 visible
+<div class="mt-5"></div>
+
+<v-clicks depth="2">
+
+1. 解析和构建`DOM Tree` (`DOM`树到屏幕图形的转化原理，其本质就是树结构到层结构的演化)
+2. 解析`CSS`构建`CSSOM Tree`，合成`Render Tree`，同一z轴空间的渲染对象都归并到同一渲染层中（第一个层模型）
+   - 根元素`document`
+   - 具有明确定位属性（`relative`、`fixed`、`sticky`、`absolute`）
+   - `CSS filter`属性
+   - `CSS transform`属性
+   - `overflow` 不为 `visible`
+   - `will-change` 属性
+
+</v-clicks>
+
+<v-click>
 
 <img src="/render.png" class="m-auto w-50%  rounded shadow" />
 
+</v-click>
+
 ---
 
-# 三、浏览器渲染流程
+## 三、浏览器渲染流程
 
-3. 布局（Layout）计算每个节点在屏幕中的位置，生成布局树
-4. 合成层： 图形层 Graphics Layer（第二个层模型），满足下列条件把渲染层提升为一个合成层
-   - 3D transform
+<div class="mt-5"></div>
+
+<v-clicks depth="2">
+
+3. 布局（`Layout`）计算每个节点在屏幕中的位置，生成布局树
+4. 合成层： 图形层 `Graphics Layer`（第二个层模型），满足下列条件把渲染层提升为一个合成层
+   - `3D transform`
    - 对子元素使用了`will-change: transform`属性的元素
    - 使用加速视频解码的`<video>`元素，拥有3D（WebGL）上下文或加速的2D上下文的`<canvas>`元素
-   - 对opacity、transform、filter属性使用了animation或transition的元素
+   - 对`opacity`、`transform`、`filter`属性使用了`animation`或`transition`的元素
+
+</v-clicks>
+
+<v-click>
 
 <img src="/render.png" class="m-auto w-50%  rounded shadow" />
 
+</v-click>
+
 ---
 
-# 三、浏览器渲染流程
+## 三、浏览器渲染流程
+
+<div class="mt-5"></div>
+
+<v-clicks>
 
 4. 绘制：合成层的绘制，生成每一个合成层的绘制记录
 5. 栅格化： 将合成层分为图块，每个图块转化为合成帧（位图），作为纹理通过GPU进程存储在GPU的显存中。
-6. 合成与显示： 合成帧随后会通过IPC协议将消息传递给浏览器主进程。浏览器收到消息后，会将页面内容绘制到内存中。最后再将内存中的内容显示在屏幕上。
+6. 合成与显示： 合成帧随后会通过`IPC`协议将消息传递给浏览器主进程。浏览器收到消息后，会将页面内容绘制到内存中。最后再将内存中的内容显示在屏幕上。
+
+</v-clicks>
+
+<v-click>
 
 <img src="/render.png" class="m-auto w-50%  rounded shadow" />
 
+</v-click>
+
 ---
 
-# Q1： DOMContentLoaded 和 Load 事件的区别？
+## 注意隐式合成
 
-<div></div>
-DOMContentLoaded：仅当DOM加载完成，不包括样式表、图片等外部资源加载完成；
+<div class="mt-5"></div>
 
-Load：当所有资源加载完成，包括样式表、图片等外部资源加载完成；
+一个或多个非合成元素应出现在堆叠顺序上的合成元素之上，被提升到合成层
+
+---
+
+<div class="mt-5"></div>
+
+1. 两个absolute定位的div在屏幕上交叠了，根据z-index的关系，其中一个层级较高的div会“盖在”另外一个的上边。
+
+2. 这个时候，如果处于下方的div被加上了CSS属性：transform: translateZ(0)，就会被浏览器提升到合成层。提升后的合成层位于Document上方，假如没有隐式合成，原本应该处于上方的div就依然跟Document共用一个Graphics Layer，层级反而降了，就出现了元素交叠关系错乱的问题。
+
+3. 所以为了纠正错误的交叠顺序，浏览器必须让原本应该“盖在”它上面的渲染层也同时提升为渲染层。
+
+---
+
+## 注意隐式合成
+
+<div class="mt-5"></div>
+
+结论：使用3D硬件加速提升动画性能时，最好给元素增加一个`z-index`属性，人为干扰复合层的排序，可以有效减少chrome创建不必要的复合层，提升渲染性能，移动端优化尤为明显。
+
+
+---
+
+## Q1： `DOMContentLoaded` 和 `Load` 事件的区别？
+
+<div class="mt-5"></div>
+
+`DOMContentLoaded`：仅当DOM加载完成，不包括样式表、图片等外部资源加载完成；
+
+`Load`：当所有资源加载完成，包括样式表、图片等外部资源加载完成；
 
 <img src="/load.png" class="m-auto w-60%  rounded shadow" />
 
 ---
 
-# Q2： CSS加载是否会阻塞页面加载？
+## Q2： CSS加载是否会阻塞页面加载？
+
+<div class="mt-5"></div>
 
 <div flex="~" gap-10><img src="/css_block_test1.png" class="m-auto w-60%  rounded shadow" />
 
@@ -340,7 +401,9 @@ layout: two-cols
 
 ---
 
-# 1. JS是单线程的
+## 1. JS是单线程的
+
+<div class="mt-5"></div>
 
 单线程的优点：
 
@@ -352,17 +415,19 @@ layout: two-cols
 layoutClass: gap-16
 ---
 
-# 2. JS是非阻塞的
+## 2. JS是非阻塞的
 
-实现机制： 事件循环机制（event loop）
+<div class="mt-5"></div>
 
-<img src="/event_loop.png" class="m-auto mt-10  rounded shadow" />
+实现机制： 事件循环机制（Event Loop）
+
+<img src="/event_loop.png" class="m-auto mt-10 h-80 rounded shadow" />
 
 ---
 
-# 同步任务和异步任务
+## 同步任务和异步任务
 
-<div></div>
+<div class="mt-5"></div>
 
 （1）所有同步任务都在主线程上执行，形成一个执行栈（execution context stack）。
 
@@ -378,7 +443,9 @@ layoutClass: gap-16
 layout: two-cols
 ---
 
-# 同步任务和异步任务
+## 同步任务和异步任务
+
+<div class="mt-5"></div>
 
 1. ajax 进入EventTable并注册回调函数success
 2. 执行栈执行console.log('start')
@@ -395,13 +462,14 @@ layout: two-cols
 
 ---
 
-# 宏任务与微任务
+## 宏任务与微任务
 
-<div></div>
+<div class="mt-5"></div>
 
 除了同步任务异步任务之分，任务还可以细分为宏任务与微任务：
 
 macro-task（宏任务）：包括整体脚本代码script、setTimeout、setInterval
+
 micro-task（微任务）：Promise、process.nextTick、MutationObserver等
 
 ---
@@ -409,7 +477,9 @@ layout: two-cols
 layoutClass: gap-16
 ---
 
-# 宏任务与微任务
+## 宏任务与微任务
+
+<div class="mt-5"></div>
 
 <img src="/tasks.jpg" class="m-auto mt-10  rounded shadow" />
 
