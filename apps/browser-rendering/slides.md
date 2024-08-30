@@ -49,11 +49,11 @@ colorSchema: light
 transition: fade-out
 ---
 
-**一个展示前端，一个未知的中间层连接着网络世界**；甚至，网络世界也可以省略：一台显示器，一个神秘的幕后黑盒。
+> **一个展示前端，一个未知的中间层连接着网络世界**；甚至，网络世界也可以省略：一台显示器，一个神秘的幕后黑盒。
 
-作为一个前端开发者，甚至每天浏览器陪伴你度过的时光比女朋友陪伴你的都要久，想想那每一个令人“不是那么期待”的早晨，每一个争分夺秒完成任务的黄昏，只有浏览器和编辑器一直是你忠实的伙伴。
+作为一名前端开发者，每天浏览器陪伴你度过的时光甚至比女朋友陪伴你的都要久，想想那每一个令人“不是那么期待”的早晨，每一个争分夺秒完成任务的黄昏，只有浏览器和编辑器一直是你忠实的伙伴。
 
-今天，我们就来一探究竟，走进这个我们与网络连接最紧密的中间地带
+今天就来一探究竟，走进这个我们与网络连接最紧密的中间地带
 
 ---
 transition: fade-out
@@ -65,7 +65,7 @@ layoutClass: gap-16
 
 <div class="mt-10"></div>
 
-- 浏览器的发展历史
+- 浏览器的发展简史
 
 - 浏览器的多进程架构
 
@@ -92,13 +92,13 @@ layoutClass: gap-16
 - 1990年：蒂姆·伯纳斯-李（Tim Berners-Lee） WorldWideWeb
 - 1993年：NCSA Mosaic 第一个可以显示图片的浏览器
 - 1994年：Netscape Mozilla -> Netscape Navigator 1.0 (win 3.1)
-- 1995年：Microsoft 推出IE 1.0 （Internet Explorer Mozilla/1.22），同年 **JavaScript 诞生**
+- 1995年：Microsoft 推出IE 1.0 （Internet Explorer Mozilla/1.22），**同年 JavaScript 诞生**
 - 1997年：IE 4.0 vs Netscape 4.0 Internet Explorer 与 Windows 操作系统捆绑发行，此后四年内，IE 获得了 75% 的市场份额，第一次浏览器大战开始。
 - 2003年：网景解散 为反垄断 开放源代码，非营利性质的 Mozilla 诞生
 - 2003年：Safari 诞生 Webkit内核
 - 2004年：Mozilla Firefox 1.0 诞生，第二次浏览器大战开始。
 - 2008年：Google Chrome 诞生
-- 2012年：推出4年后取代 Internet Explorer 成为最受欢迎的浏览器。
+- 2012年：Chrome 推出4年后取代 Internet Explorer 成为最受欢迎的浏览器。
 
 <div v-click class="mt-5">世界历史从不缺少史诗般的权力斗争，有征服世界的暴君，也有落败的勇士。Web 浏览器的历史也大抵如此。学术先驱们编写出引发信息革命的简易软件，并为浏览器的优势和互联网用户而战。</div>
 
@@ -144,20 +144,19 @@ layoutClass: gap-16
 
 ## 2. 浏览器包含哪些类型的进程？
 
-- Browser 进程
+- 主进程（Browser 进程）
 
   - 负责浏览器的界面显示，与用户交互（前进后退按钮）等
   - 负责各个页面的管理（创建和销毁其他进程）
   - 网络资源的管理，下载等
 
 - Renderer进程：浏览器内核（webkit、blink）渲染进程
-
   - 负责页面的渲染，JS执行，事件处理等
   - 每个tab页一个进程，互不影响
-
-- GPU进程：负责图形、3D绘制
-
-- 插件进程：仅当使用插件时才创建
+- GPU进程
+  - 负责图形、3D绘制
+- 插件进程
+  - 仅当使用插件时才创建
 
 ---
 
@@ -193,12 +192,12 @@ layoutClass: gap-16
 
 ---
 transition: fade-out
-class: text-sm
+class: text-3.5
 ---
 
-## 渲染进程（浏览器内核）
+## 渲染进程（浏览器内核，主要）
 
-<div class="mt-10"></div>
+<div class="mt-5"></div>
 
 - GUI渲染线程（主线程、工作线程、排版线程、光栅线程、合成器线程等）
   - 负责渲染页面、布局和绘制
@@ -223,12 +222,20 @@ class: text-sm
 
 <div class="mt-10"></div>
 
-1. 为什么`Javascript`执行是单线程的？
+1. 为什么`Javascript`只在主线程中运行？
 2. 为什么`GUI`渲染线程与`JS`引擎线程互斥？
 
-创建js这门语言的时候，多进程多线程的架构不流行，硬件的支持不好，而且多线程操作时需要加锁，编码的复杂性会增加。
+<v-click>
 
-`js`能操作`DOM`，如果`JS`和`GUI`两个线程同时操作DOM，那么渲染可能会导致不可预测的结果，所以一开始的设定就是互斥的关系。
+1. 创建 JS 这门语言的时候，多进程多线程的架构不流行，硬件的支持不好，而且多线程操作时需要加锁，编码的复杂性会增加，且如果多个JavaScript操作同个DOM元素时，浏览器无法判断渲染结果是否符合预期。
+
+</v-click>
+
+<v-click>
+
+2. `JS`是可以操作`DOM`的，如果同时修改元素属性并同时渲染界面（即`JS`线程和`UI`线程同时运行），那么渲染线程前后获得的元素就可能不一致了。为了防止渲染出现不可预期的结果，浏览器设定`GUI`渲染线程和`JS`引擎线程为互斥关系，当`JS`引擎线程执行时GUI渲染线程会被挂起，`GUI`更新则被保存在一个队列中等待`JS`引擎线程空闲时立即被执行。
+
+</v-click>
 
 ---
 
@@ -310,9 +317,9 @@ class: text-sm
 
 <div class="mt-5"></div>
 
-1. 两个absolute定位的div在屏幕上交叠了，根据z-index的关系，其中一个层级较高的div会“盖在”另外一个的上边。
+1. 两个`absolute`定位的`div`在屏幕上交叠了，根据`z-index`的关系，其中一个层级较高的`div`会“盖在”另外一个的上边。
 
-2. 这个时候，如果处于下方的div被加上了CSS属性：transform: translateZ(0)，就会被浏览器提升到合成层。提升后的合成层位于Document上方，假如没有隐式合成，原本应该处于上方的div就依然跟Document共用一个Graphics Layer，层级反而降了，就出现了元素交叠关系错乱的问题。
+2. 这个时候，如果处于下方的`div`被加上了CSS属性：`transform: translateZ(0)`，就会被浏览器提升到合成层。提升后的合成层位于Document上方，假如没有隐式合成，原本应该处于上方的div就依然跟Document共用一个**Graphics Layer**，层级反而降了，就出现了元素交叠关系错乱的问题。
 
 3. 所以为了纠正错误的交叠顺序，浏览器必须让原本应该“盖在”它上面的渲染层也同时提升为渲染层。
 
@@ -322,8 +329,7 @@ class: text-sm
 
 <div class="mt-5"></div>
 
-结论：使用3D硬件加速提升动画性能时，最好给元素增加一个`z-index`属性，人为干扰复合层的排序，可以有效减少chrome创建不必要的复合层，提升渲染性能，移动端优化尤为明显。
-
+结论：使用3D硬件加速提升动画性能时，最好给元素增加一个`z-index`属性，人为干扰复合层的排序，可以有效减少Chrome创建不必要的复合层，提升渲染性能，移动端优化尤为明显。
 
 ---
 
@@ -345,7 +351,7 @@ class: text-sm
 
 <div flex="~" gap-10><img src="/css_block_test1.png" class="m-auto w-60%  rounded shadow" />
 
-<div><div>实验1：弱网下</div><div>现象：css没加载出来之前，页面开始白屏，直到css加载完成之后，红色字体才显示出来，但是控制台有输出</div></div></div>
+<div><div>实验1：弱网下</div><div>现象：CSS没加载出来之前，页面开始白屏，直到CSS加载完成之后，红色字体才显示出来，但是控制台有输出</div></div></div>
 
 ---
 
@@ -353,7 +359,7 @@ class: text-sm
 
 <div flex="~" gap-10><img src="/css_block_test2.png" class="m-auto w-60%  rounded shadow" />
 
-<div><div>实验2：弱网下</div><div>现象：位于css加载语句前的js代码先执行了，但位于css加载语句后的代码却迟迟没有执行，直到css加载完成后，它才开始执行</div></div></div>
+<div><div>实验2：弱网下</div><div>现象：位于CSS加载语句前的JS代码先执行了，但位于CSS加载语句后的代码却迟迟没有执行，直到CSS加载完成后，它才开始执行</div></div></div>
 
 ---
 
@@ -363,17 +369,17 @@ class: text-sm
 
 结论：
 
-1. CSS加载不会阻塞DOM树的解析（因此js中能获取dom元素，虽然页面还未渲染）
+1. CSS加载不会阻塞DOM树的解析（因此JS中能获取dom元素，虽然页面还未渲染）
 
-2. 会阻塞render树的合成（浏览器渲染到页面时需等待css加载完毕）
+2. 会阻塞Render树的合成（浏览器渲染到页面时需等待CSS加载完毕）
 
-3. 会阻塞后面的js执行（js执行时可能会操作dom元素，如果css未加载完毕，dom元素可能未加载完毕）
+3. 会阻塞后面的JS执行（JS执行时可能会操作DOM元素，如果CSS未加载完毕，DOM元素可能未加载完毕）
 
 ---
 layout: two-cols
 ---
 
-# Q3： JS的defer和async的区别？
+# Q3： JS的`defer`和`async`的区别？
 
 <div></div>
 
