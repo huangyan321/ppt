@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <title>层结构</title>
+    <style type="text/css">
+      #A,
+      #B,
+      #C,
+      #D {
+        width: 100px;
+        height: 100px;
+        position: absolute;
+      }
+
+      #A {
+        left: 40px;
+        top: 40px;
+        z-index: 4;
+        background-color: yellow;
+      }
+      #B {
+        left: 60px;
+        top: 60px;
+        z-index: 5;
+        will-change: left;
+        animation: move 1s linear;
+        background-color: red;
+      }
+      @keyframes move {
+        form {
+          left: 40px;
+        }
+        to {
+          left: 150px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="A">A</div>
+    <div id="B">B</div>
+  </body>
+</html>

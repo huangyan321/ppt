@@ -89,16 +89,17 @@ transition: fade-out
 layoutClass: gap-16
 ---
 
-- 1990年：蒂姆·伯纳斯-李（Tim Berners-Lee） WorldWideWeb
-- 1993年：NCSA Mosaic 第一个可以显示图片的浏览器
-- 1994年：Netscape Mozilla -> Netscape Navigator 1.0 (win 3.1)
-- 1995年：Microsoft 推出IE 1.0 （Internet Explorer Mozilla/1.22），**同年 JavaScript 诞生**
-- 1997年：IE 4.0 vs Netscape 4.0 Internet Explorer 与 Windows 操作系统捆绑发行，此后四年内，IE 获得了 75% 的市场份额，第一次浏览器大战开始。
-- 2003年：网景解散 为反垄断 开放源代码，非营利性质的 Mozilla 诞生
-- 2003年：Safari 诞生 Webkit内核
+- 1990年：蒂姆·伯纳斯-李（Tim Berners-Lee） WorldWideWeb，第一款Web浏览器
+- 1993年：NCSA Mosaic 第一款可以显示图片的浏览器
+- 1994年：Netscape Navigator 1.0 (win 3.1) 诞生，**95年 Brendan Eich 开发了 JavaScript**
+- 1995年：Microsoft 推出IE 1.0 （Internet Explorer Mozilla/1.22）
+- 1997年：IE 4.0 vs Netscape 4.0， Internet Explorer 与 Windows 操作系统捆绑发行，此后四年内，IE 获得了 75% 的市场份额，（第一次浏览器大战）。
+- 2003年：网景解散 为反垄断 开放Netscape源代码，非营利性质的 Mozilla 诞生
+- 2003年：Safari 诞生 Webkit内核, 目前市场上第二大浏览器。
 - 2004年：Mozilla Firefox 1.0 诞生，第二次浏览器大战开始。
-- 2008年：Google Chrome 诞生
+- 2008年：Netscape最终灭绝，Google Chrome 诞生
 - 2012年：Chrome 推出4年后取代 Internet Explorer 成为最受欢迎的浏览器。
+- 2015年：Microsoft Edge发布，难掩颓势。截止2021年市场份额仅为5%
 
 <div v-click class="mt-5">世界历史从不缺少史诗般的权力斗争，有征服世界的暴君，也有落败的勇士。Web 浏览器的历史也大抵如此。学术先驱们编写出引发信息革命的简易软件，并为浏览器的优势和互联网用户而战。</div>
 
@@ -162,7 +163,7 @@ layoutClass: gap-16
 
 ## 2. 浏览器多进程的特点？
 
-<div class="mt-10"></div>
+<div class="mt-5"></div>
 
 ### 优点
 
@@ -171,6 +172,8 @@ layoutClass: gap-16
 - 避免单个page crash（tab、插件等）影响整个浏览器
 - 充分利用多核优势
 - 更为安全，在系统层面界定了不同进程的权限
+
+<img src="/render-process.webp" class="m-auto w-40%  rounded shadow" >
 
 <div class="mt-10"></div>
 
@@ -245,14 +248,13 @@ class: text-3.5
 
 <v-clicks depth="2">
 
-1. 解析和构建`DOM Tree` (`DOM`树到屏幕图形的转化原理，其本质就是树结构到层结构的演化)
+1. 解析和构建`DOM Tree` (`DOM`树到屏幕图形的转化原理，其本质就是**树结构**到**层结构**的演化)
 2. 解析`CSS`构建`CSSOM Tree`，合成`Render Tree`，同一z轴空间的渲染对象都归并到同一渲染层中（第一个层模型）
    - 根元素`document`
    - 具有明确定位属性（`relative`、`fixed`、`sticky`、`absolute`）
    - `CSS filter`属性
    - `CSS transform`属性
-   - `overflow` 不为 `visible`
-   - `will-change` 属性
+   - `overflow` 不为 `visible` 的元素 等等。。。
 
 </v-clicks>
 
@@ -293,9 +295,9 @@ class: text-3.5
 
 <v-clicks>
 
-4. 绘制：合成层的绘制，生成每一个合成层的绘制记录
-5. 栅格化： 将合成层分为图块，每个图块转化为合成帧（位图），作为纹理通过GPU进程存储在GPU的显存中。
-6. 合成与显示： 合成帧随后会通过`IPC`协议将消息传递给浏览器主进程。浏览器收到消息后，会将页面内容绘制到内存中。最后再将内存中的内容显示在屏幕上。
+5. 绘制：合成层的绘制，生成每一个合成层的绘制记录
+6. 栅格化： 将合成层分为图块，每个图块转化为合成帧（位图），作为纹理通过GPU进程存储在GPU的显存中。
+7. 合成与显示： 合成帧随后会通过`IPC`协议将消息传递给浏览器主进程。浏览器收到消息后，会将页面内容绘制到内存中。最后再将内存中的内容显示在屏幕上。
 
 </v-clicks>
 
@@ -321,7 +323,12 @@ class: text-3.5
 
 2. 这个时候，如果处于下方的`div`被加上了CSS属性：`transform: translateZ(0)`，就会被浏览器提升到合成层。提升后的合成层位于Document上方，假如没有隐式合成，原本应该处于上方的div就依然跟Document共用一个**Graphics Layer**，层级反而降了，就出现了元素交叠关系错乱的问题。
 
-3. 所以为了纠正错误的交叠顺序，浏览器必须让原本应该“盖在”它上面的渲染层也同时提升为渲染层。
+3. 所以为了纠正错误的交叠顺序，浏览器必须让原本应该“盖在”它上面的渲染层也同时提升为合成层。
+
+<div flex="~">
+<img class="w-80" src="/隐式合成1.png">
+<img class="w-80"  src="/隐式合成2.png">
+<img class="w-80"  src="/隐式合成3.png"></div>
 
 ---
 
