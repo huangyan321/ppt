@@ -344,9 +344,17 @@ class: text-3.5
 
 <div class="mt-5"></div>
 
+<v-click>
+
 `DOMContentLoaded`：仅当DOM加载完成，不包括样式表、图片等外部资源加载完成；
 
+</v-click>
+
+<v-click>
+
 `Load`：当所有资源加载完成，包括样式表、图片等外部资源加载完成；
+
+</v-click>
 
 <img src="/load.png" class="m-auto w-60%  rounded shadow" />
 
@@ -386,7 +394,7 @@ class: text-3.5
 layout: two-cols
 ---
 
-# Q3： JS的`defer`和`async`的区别？
+# Q3： `script`元素的`defer`和`async`的区别？
 
 <div></div>
 
@@ -398,9 +406,13 @@ layout: two-cols
 
 红色线代表执行时间
 
+<v-click>
+
 1. 网络读取都是异步的，不会阻塞HTML解析。
 2. 下载后的执行时机不一样。
 3. defer是顺序的。
+
+</v-click>
 
 :: right ::
 
@@ -460,14 +472,14 @@ layout: two-cols
 
 <div class="mt-5"></div>
 
-1. ajax 进入EventTable并注册回调函数success
-2. 执行栈执行console.log('start')
+1. ajax 进入EventLoop并注册回调函数`success`
+2. 执行栈执行`console.log('start')`
 3. ajax事件完成，回调函数进入Callback Queue
-4. 主线程空闲时从Callback Queue读取回调函数success执行
+4. 主线程空闲时从Callback Queue读取回调函数`success`执行
 
-想下setTimeOut(fn,0)的执行过程？
-主线程执行完同步任务后，会立即执行setTimeout的回调函数吗？
-答案是不会，setTimeout的回调函数会进入任务队列，等待主线程空闲时才会执行。
+想下`setTimeout(fn,0)`的执行过程？
+主线程执行完同步任务后，会立即执行`setTimeout`的回调函数吗？
+答案是不会，`setTimeout`的回调函数会进入任务队列，等待主线程空闲时才会执行。
 
 :: right ::
 
