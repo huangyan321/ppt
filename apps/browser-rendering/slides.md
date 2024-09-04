@@ -27,7 +27,7 @@ colorSchema: light
 
 # 前端优化原理
 
-<div class="text-6">浏览器运行机制 @van</div>
+<div class="text-6">浏览器运行机制 @王伟平</div>
 
 <div class="pt-12">
   <span @click="$slidev.nav.next" class="px-2 py-1 rounded cursor-pointer" hover="bg-white bg-opacity-10">
@@ -48,8 +48,6 @@ colorSchema: light
 ---
 transition: fade-out
 ---
-
-> **一个展示前端，一个未知的中间层连接着网络世界**；甚至，网络世界也可以省略：一台显示器，一个神秘的幕后黑盒。
 
 作为一名前端开发者，每天浏览器陪伴你度过的时光甚至比女朋友陪伴你的都要久，想想那每一个令人“不是那么期待”的早晨，每一个争分夺秒完成任务的黄昏，只有浏览器和编辑器一直是你忠实的伙伴。
 
@@ -104,15 +102,23 @@ layoutClass: gap-16
 <div v-click class="mt-5">世界历史从不缺少史诗般的权力斗争，有征服世界的暴君，也有落败的勇士。Web 浏览器的历史也大抵如此。学术先驱们编写出引发信息革命的简易软件，并为浏览器的优势和互联网用户而战。</div>
 
 ---
-layout: two-cols
-layoutClass: gap-16
+transition: slide-up
+level: 2
+---
+
+**参考链接：**
+
+[掘金：浏览器简史及其核心原理详解：47 张图带你走进浏览器的世界](https://juejin.cn/post/6983896089703235592)
+
+[Mozilla: Web 浏览器简史](https://www.mozilla.org/zh-CN/firefox/browsers/browser-history/)
+
 ---
 
 ## 二、浏览器的多进程架构
 
 <div v-click flex="~" mt-6 gap-10 >
-<img src="/process1.jpg" class="w-80% rounded shadow" />
-<img src="/process2.jpg" class="w-80% rounded shadow" />
+<img src="/process1.jpg" class="w-40% rounded shadow" />
+<img src="/process2.jpg" class="w-40% rounded shadow" />
 </div>
 
 ---
@@ -225,18 +231,18 @@ class: text-3.5
 
 <div class="mt-10"></div>
 
-1. 为什么`Javascript`只在主线程中运行？
+1. 为什么`Javascript`是单线程的？
 2. 为什么`GUI`渲染线程与`JS`引擎线程互斥？
 
 <v-click>
 
-1. 创建 JS 这门语言的时候，多进程多线程的架构不流行，硬件的支持不好，而且多线程操作时需要加锁，编码的复杂性会增加，且如果多个JavaScript操作同个DOM元素时，浏览器无法判断渲染结果是否符合预期。
+<span class="text-red">1. 创建 JS 这门语言的时候，多进程多线程的架构不流行，硬件的支持不好，而且多线程操作时需要加锁，编码的复杂性会增加，且如果多个JavaScript操作同个DOM元素时，浏览器无法判断渲染结果是否符合预期。</span>
 
 </v-click>
 
 <v-click>
 
-2. `JS`是可以操作`DOM`的，如果同时修改元素属性并同时渲染界面（即`JS`线程和`UI`线程同时运行），那么渲染线程前后获得的元素就可能不一致了。为了防止渲染出现不可预期的结果，浏览器设定`GUI`渲染线程和`JS`引擎线程为互斥关系，当`JS`引擎线程执行时GUI渲染线程会被挂起，`GUI`更新则被保存在一个队列中等待`JS`引擎线程空闲时立即被执行。
+<span class="text-red">2. `JS`是可以操作`DOM`的，如果同时修改元素属性并同时渲染界面（即`JS`线程和`UI`线程同时运行），那么渲染线程前后获得的元素就可能不一致了。为了防止渲染出现不可预期的结果，浏览器设定`GUI`渲染线程和`JS`引擎线程为互斥关系，当`JS`引擎线程执行时GUI渲染线程会被挂起，`GUI`更新则被保存在一个队列中等待`JS`引擎线程空闲时立即被执行。</span>
 
 </v-click>
 
@@ -250,19 +256,9 @@ class: text-3.5
 
 1. 解析和构建`DOM Tree` (`DOM`树到屏幕图形的转化原理，其本质就是**树结构**到**层结构**的演化)
 2. 解析`CSS`构建`CSSOM Tree`，合成`Render Tree`，同一z轴空间的渲染对象都归并到同一渲染层中（第一个层模型）
-   - 根元素`document`
-   - 具有明确定位属性（`relative`、`fixed`、`sticky`、`absolute`）
-   - `CSS filter`属性
-   - `CSS transform`属性
-   - `overflow` 不为 `visible` 的元素 等等。。。
+3. 布局（`Layout`）计算每个节点在屏幕中的位置，生成布局树
 
 </v-clicks>
-
-<v-click>
-
-<img src="/render.png" class="m-auto w-50%  rounded shadow" />
-
-</v-click>
 
 ---
 
@@ -272,20 +268,16 @@ class: text-3.5
 
 <v-clicks depth="2">
 
-3. 布局（`Layout`）计算每个节点在屏幕中的位置，生成布局树
 4. 合成层： 图形层 `Graphics Layer`（第二个层模型），满足下列条件把渲染层提升为一个合成层
    - `3D transform`
    - 对子元素使用了`will-change: transform`属性的元素
    - 使用加速视频解码的`<video>`元素，拥有3D（WebGL）上下文或加速的2D上下文的`<canvas>`元素
    - 对`opacity`、`transform`、`filter`属性使用了`animation`或`transition`的元素
+5. 绘制：合成层的绘制，生成每一个合成层的绘制记录
+6. 栅格化： 将合成层分为图块，每个图块转化为合成帧（位图），作为纹理通过GPU进程存储在GPU的显存中。
+7. 合成与显示： 合成帧随后会通过`IPC`协议将消息传递给浏览器主进程。浏览器收到消息后，会将页面内容绘制到内存中。最后再将内存中的内容显示在屏幕上。
 
 </v-clicks>
-
-<v-click>
-
-<img src="/render.png" class="m-auto w-50%  rounded shadow" />
-
-</v-click>
 
 ---
 
@@ -293,19 +285,7 @@ class: text-3.5
 
 <div class="mt-5"></div>
 
-<v-clicks>
-
-5. 绘制：合成层的绘制，生成每一个合成层的绘制记录
-6. 栅格化： 将合成层分为图块，每个图块转化为合成帧（位图），作为纹理通过GPU进程存储在GPU的显存中。
-7. 合成与显示： 合成帧随后会通过`IPC`协议将消息传递给浏览器主进程。浏览器收到消息后，会将页面内容绘制到内存中。最后再将内存中的内容显示在屏幕上。
-
-</v-clicks>
-
-<v-click>
-
-<img src="/render.png" class="m-auto w-50%  rounded shadow" />
-
-</v-click>
+<img src="/render.png" class="m-auto  rounded shadow" />
 
 ---
 
@@ -493,9 +473,9 @@ layout: two-cols
 
 除了同步任务异步任务之分，任务还可以细分为宏任务与微任务：
 
-macro-task（宏任务）：包括整体脚本代码script、setTimeout、setInterval
+macro-task（宏任务）：包括整体脚本代码`script`、`setTimeout`、`setInterval`
 
-micro-task（微任务）：Promise、process.nextTick、MutationObserver等
+micro-task（微任务）：`Promise`、`process.nextTick`、`MutationObserver`等
 
 ---
 layout: two-cols
